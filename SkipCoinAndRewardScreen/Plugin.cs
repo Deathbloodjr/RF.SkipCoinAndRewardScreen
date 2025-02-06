@@ -21,8 +21,7 @@ namespace SkipCoinAndRewardScreen
 
 
         public ConfigEntry<bool> ConfigEnabled;
-        public ConfigEntry<string> ConfigSongTitleLanguageOverride;
-        public ConfigEntry<float> ConfigFlipInterval;
+        public ConfigEntry<bool> ConfigDontSkipOnMaxBankedLevel;
 
 
 
@@ -44,6 +43,11 @@ namespace SkipCoinAndRewardScreen
                 "Enabled",
                 true,
                 "Enables the mod.");
+
+            ConfigDontSkipOnMaxBankedLevel = Config.Bind("General",
+                "DontSkipOnMaxBankedLevel",
+                true,
+                "This will show the coin and reward screen if you have 5 banked levels to claim.");
         }
 
         private void SetupHarmony()

@@ -15,7 +15,19 @@ namespace SkipCoinAndRewardScreen.Plugins
         [HarmonyPostfix]
         public static void ResultPlayer_SettingDonCoinAndReward_Postfix(ResultPlayer __instance)
         {
+
             __instance.isSkipCoinAndReward = true;
+            if (Plugin.Instance.ConfigDontSkipOnMaxBankedLevel.Value)
+            {
+                var bankStockCount = __instance.resultCoinExp.PlayerData.BankStockCount();
+                var playerLevel = __instance.resultCoinExp.PlayerData.CurrentLevel();
+                Logger.Log("bankStockCount: " + bankStockCount);
+                Logger.Log("playerLevel: " + playerLevel);
+                if (bankStockCount == 5 && playerLevel != 400)
+                {
+                    __instance.isSkipCoinAndReward = false;
+                }
+            }
         }
     }
 }
