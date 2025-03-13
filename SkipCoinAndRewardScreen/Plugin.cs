@@ -7,6 +7,8 @@ using BepInEx.Configuration;
 using SkipCoinAndRewardScreen.Plugins;
 using UnityEngine;
 using System.Collections;
+using SaveProfileManager.Plugins;
+using System.Reflection;
 
 namespace SkipCoinAndRewardScreen
 {
@@ -22,6 +24,7 @@ namespace SkipCoinAndRewardScreen
 
         public ConfigEntry<bool> ConfigEnabled;
         public ConfigEntry<bool> ConfigDontSkipOnMaxBankedLevel;
+        public ConfigEntry<bool> ConfigSkipCrownPoint;
 
 
 
@@ -31,23 +34,37 @@ namespace SkipCoinAndRewardScreen
 
             Log = base.Log;
 
-            SetupConfig();
+            SetupConfig(Config, Path.Combine("BepInEx", "data", ModName));
             SetupHarmony();
+
+            var isSaveManagerLoaded = IsSaveManagerLoaded();
+            if (isSaveManagerLoaded)
+            {
+                AddToSaveManager();
+            }
         }
 
-        private void SetupConfig()
+        private void SetupConfig(ConfigFile config, string saveFolder, bool isSaveManager = false)
         {
             var dataFolder = Path.Combine("BepInEx", "data", ModName);
 
-            ConfigEnabled = Config.Bind("General",
-                "Enabled",
-                true,
-                "Enables the mod.");
+            if (!isSaveManager)
+            {
+                ConfigEnabled = config.Bind("General",
+                   "Enabled",
+                   true,
+                   "Enables the mod.");
+            }
 
-            ConfigDontSkipOnMaxBankedLevel = Config.Bind("General",
+            ConfigDontSkipOnMaxBankedLevel = config.Bind("General",
                 "DontSkipOnMaxBankedLevel",
                 true,
                 "This will show the coin and reward screen if you have 5 banked levels to claim.");
+
+            ConfigSkipCrownPoint = config.Bind("General",
+                "SkipCrownPoint",
+                true,
+                "Skips any earned crown point menus. You'll still obtain the crown points.");
         }
 
         private void SetupHarmony()
@@ -55,26 +72,31 @@ namespace SkipCoinAndRewardScreen
             // Patch methods
             _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 
-            if (ConfigEnabled.Value)
+            LoadPlugin(ConfigEnabled.Value);
+        }
+
+        public static void LoadPlugin(bool enabled)
+        {
+            if (enabled)
             {
                 bool result = true;
                 // If any PatchFile fails, result will become false
-                result &= PatchFile(typeof(SkipCoinAndRewardHook));
+                result &= Instance.PatchFile(typeof(SkipCoinAndRewardHook));
                 if (result)
                 {
-                    Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
+                    Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
                 }
                 else
                 {
-                    Log.LogError($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.");
+                    Logger.Log($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.", LogType.Error);
                     // Unload this instance of Harmony
                     // I hope this works the way I think it does
-                    _harmony.UnpatchSelf();
+                    Instance._harmony.UnpatchSelf();
                 }
             }
             else
             {
-                Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
+                Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
             }
         }
 
@@ -88,14 +110,54 @@ namespace SkipCoinAndRewardScreen
             {
                 _harmony.PatchAll(type);
 #if DEBUG
-                Log.LogInfo("File patched: " + type.FullName);
+                Logger.Log("File patched: " + type.FullName);
 #endif
                 return true;
             }
             catch (Exception e)
             {
-                Log.LogInfo("Failed to patch file: " + type.FullName);
-                Log.LogInfo(e.Message);
+                Logger.Log("Failed to patch file: " + type.FullName);
+                Logger.Log(e.Message);
+                return false;
+            }
+        }
+
+        public static void UnloadPlugin()
+        {
+            Instance._harmony.UnpatchSelf();
+            Logger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} has been unpatched.");
+        }
+
+        public static void ReloadPlugin()
+        {
+            // Reloading will always be completely different per mod
+            // You'll want to reload any config file or save data that may be specific per profile
+            // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
+            //SwapSongLanguagesPatch.InitializeOverrideLanguages();
+            //TaikoSingletonMonoBehaviour<CommonObjects>.Instance.MyDataManager.MusicData.Reload();
+        }
+
+        public void AddToSaveManager()
+        {
+            // Add SaveDataManager dll path to your csproj.user file
+            // https://github.com/Deathbloodjr/RF.SaveProfileManager
+            var plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
+            plugin.AssignLoadFunction(LoadPlugin);
+            plugin.AssignUnloadFunction(UnloadPlugin);
+            //plugin.AssignReloadSaveFunction(ReloadPlugin);
+            plugin.AssignConfigSetupFunction(SetupConfig);
+            plugin.AddToManager();
+        }
+
+        private bool IsSaveManagerLoaded()
+        {
+            try
+            {
+                Assembly loadedAssembly = Assembly.Load("com.DB.RF.SaveProfileManager");
+                return loadedAssembly != null;
+            }
+            catch
+            {
                 return false;
             }
         }

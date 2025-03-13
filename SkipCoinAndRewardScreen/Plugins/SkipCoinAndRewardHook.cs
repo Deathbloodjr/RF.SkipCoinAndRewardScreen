@@ -29,5 +29,17 @@ namespace SkipCoinAndRewardScreen.Plugins
                 }
             }
         }
+
+        [HarmonyPatch(typeof(ResultPlayer))]
+        [HarmonyPatch(nameof(ResultPlayer.SettingCrownPointAndReward))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPostfix]
+        public static void ResultPlayer_SettingCrownPointAndReward_Postfix(ResultPlayer __instance)
+        {
+            if (Plugin.Instance.ConfigSkipCrownPoint.Value)
+            {
+                __instance.isSkipCrownPoint = true;
+            }
+        }
     }
 }
