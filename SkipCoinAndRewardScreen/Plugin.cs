@@ -146,7 +146,7 @@ namespace SkipCoinAndRewardScreen
             plugin.AssignUnloadFunction(UnloadPlugin);
             //plugin.AssignReloadSaveFunction(ReloadPlugin);
             plugin.AssignConfigSetupFunction(SetupConfig);
-            plugin.AddToManager();
+            plugin.AddToManager(ConfigEnabled.Value);
         }
 
         private bool IsSaveManagerLoaded()
