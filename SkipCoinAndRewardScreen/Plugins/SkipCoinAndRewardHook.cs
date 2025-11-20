@@ -11,12 +11,14 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace SkipCoinAndRewardScreen.Plugins
 {
     internal class SkipCoinAndRewardHook
     {
-
+        // Skip Crown Point screen
         [HarmonyPatch(typeof(CrownPointManager))]
         [HarmonyPatch(nameof(CrownPointManager.GetCrownPointData))]
         [HarmonyPatch(MethodType.Normal)]
@@ -40,7 +42,7 @@ namespace SkipCoinAndRewardScreen.Plugins
         }
 
 
-
+        // Skip Coin and Level screen
         [HarmonyPatch(typeof(ResultCoinExp))]
         [HarmonyPatch(nameof(ResultCoinExp.Start))]
         [HarmonyPatch(MethodType.Normal)]
@@ -67,27 +69,18 @@ namespace SkipCoinAndRewardScreen.Plugins
                 __instance.m_state = ResultCoinExp.State.Show;
                 __instance.Hide();
                 __instance.Skip();
-
-                //__instance.cancellationTokenSource.Cancel();
             }
 
             Logger.Log(output, LogType.Debug);
         }
 
-        [HarmonyPatch(typeof(ResultPlayer))]
-        [HarmonyPatch(nameof(ResultPlayer.DisplayDonEffects))]
+        [HarmonyPatch(typeof(ResultPlayer._ShowDonCoinAndRewardAsync_d__164))]
+        [HarmonyPatch(nameof(ResultPlayer._ShowDonCoinAndRewardAsync_d__164.MoveNext))]
         [HarmonyPatch(MethodType.Normal)]
         [HarmonyPostfix]
-        public static void ResultPlayer_DisplayDonEffects_Postfix(ResultPlayer __instance)
+        public static void ResultPlayer__ShowDonCoinAndRewardAsync_d__164_MoveNext_Postfix(ResultPlayer._ShowDonCoinAndRewardAsync_d__164 __instance)
         {
-            List<string> output = new List<string>()
-            {
-                "ResultPlayer_DisplayDonEffects_Postfix",
-            };
-
-            __instance.flowerMask.gameObject.SetActive(true);
-
-            Logger.Log(output, LogType.Debug);
+            __instance.__4__this.flowerMask.enabled = true;
         }
     }
 }
