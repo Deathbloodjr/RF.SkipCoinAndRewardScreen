@@ -25,20 +25,22 @@ namespace SkipCoinAndRewardScreen.Plugins
         [HarmonyPostfix]
         public static void CrownPointManager_GetCrownPointData_Postfix(CrownPointManager __instance, ref CrownPointData __result)
         {
+            List<string> output = new List<string>();
+            output.Add("CrownPointManager_GetCrownPointData_Postfix");
             if (Plugin.Instance.ConfigSkipCrownPoint.Value)
             {
-                Logger.Log("__result.CurrentPoints: " + __result.CurrentPoints);
-                Logger.Log("__result.SavedPoints: " + __result.SavedPoints);
-                Logger.Log("__result.PointsGained: " + __result.PointsGained);
+                output.Add("__result.CurrentPoints: " + __result.CurrentPoints);
+                output.Add("__result.SavedPoints: " + __result.SavedPoints);
+                output.Add("__result.PointsGained: " + __result.PointsGained);
 
                 __result = new CrownPointData()
                 {
                     CurrentPoints = __result.CurrentPoints,
                     SavedPoints = __result.CurrentPoints,
                 };
-                Logger.Log("__result.PointsGained: " + __result.PointsGained);
+                output.Add("__result.PointsGained: " + __result.PointsGained);
+                Logger.Log(output, LogType.Debug);
             }
-            Logger.Log("CrownPointManager_GetCrownPointData_Postfix");
         }
 
 
