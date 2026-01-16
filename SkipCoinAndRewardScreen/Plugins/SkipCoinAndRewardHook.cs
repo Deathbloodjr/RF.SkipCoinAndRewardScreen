@@ -2,9 +2,12 @@
 using Cysharp.Threading.Tasks.CompilerServices;
 using Fantasista;
 using HarmonyLib;
+using Scripts.Common;
 using Scripts.CrownPoint;
 using Scripts.OutGame.CrownPoint;
+using Scripts.OutGame.MainMenu;
 using Scripts.Scene;
+using Scripts.UserData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +15,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace SkipCoinAndRewardScreen.Plugins
@@ -83,6 +87,41 @@ namespace SkipCoinAndRewardScreen.Plugins
         public static void ResultPlayer__ShowDonCoinAndRewardAsync_d__164_MoveNext_Postfix(ResultPlayer._ShowDonCoinAndRewardAsync_d__164 __instance)
         {
             __instance.__4__this.flowerMask.enabled = true;
+        }
+
+        static bool skipRewards = false;
+
+        [HarmonyPatch(typeof(ResultPlayer))]
+        [HarmonyPatch(nameof(ResultPlayer.Start))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPrefix]
+        public static void ResultPlayer_Start_Prefix(RewardWindow __instance)
+        {
+            // Skip any rewards whenever the ResultPlayer has started
+            skipRewards = true;
+        }
+
+        [HarmonyPatch(typeof(RewardReserveData))]
+        [HarmonyPatch(nameof(RewardReserveData.HasData))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPostfix]
+        public static void RewardReserveData_HasData_Postfix(RewardReserveData __instance, ref bool __result)
+        {
+            Logger.Log("RewardReserveData_HasData_Postfix", LogType.Debug);
+            if (skipRewards && SceneManager.GetActiveScene().name != "MainMenu")
+            {
+                __result = false;
+            }
+        }
+
+        [HarmonyPatch(typeof(MainMenuSceneUiController))]
+        [HarmonyPatch(nameof(MainMenuSceneUiController.StartUpdate))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPrefix]
+        public static void MainMenuSceneUiController_StartUpdate_Prefix(RewardWindow __instance)
+        {
+            // Allow for rewards whenever you enter the Main Menu
+            skipRewards = false;
         }
     }
 }
