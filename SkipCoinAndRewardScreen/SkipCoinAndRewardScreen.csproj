@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ModName>SkipCoinAndRewardScreen</ModName>
-    <ModVersion>1.1.0</ModVersion>
-    <Description>A Rhythm Festival mod to skip the coin and reward screen when finishing a song, while still getting rewards.</Description>
+    <ModVersion>1.2.0</ModVersion>
+    <Description>A Rhythm Festival mod to skip the coin, reward, and crown point screens when finishing a song, while still getting rewards.</Description>
   </PropertyGroup>
   
   <Target Name="UserFile" AfterTargets="PreBuildEvent">
